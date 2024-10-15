@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"notification-service/domain"
@@ -43,8 +42,7 @@ func (h *Handler) AddEvent(w http.ResponseWriter, r *http.Request) {
 
 	h.storage.AddEvent(event)
 	h.events <- event
-	log.Printf("New event added: %+v", event)
-	w.WriteHeader(http.StatusCreated)
+	h.writeJSON(w, http.StatusCreated, map[string]string{"message": "New event added"})
 }
 
 func (h *Handler) sendErrorResponse(w http.ResponseWriter, statusCode int, message string) {
@@ -52,5 +50,11 @@ func (h *Handler) sendErrorResponse(w http.ResponseWriter, statusCode int, messa
 	w.WriteHeader(statusCode)
 
 	response := map[string]string{"error": message}
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
+}
+
+func (h *Handler) writeJSON(w http.ResponseWriter, statusCode int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	_ = json.NewEncoder(w).Encode(v)
 }
